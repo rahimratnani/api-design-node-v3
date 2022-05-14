@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import mongoose from 'mongoose'
 import cuid from 'cuid'
 import _ from 'lodash'
@@ -8,9 +9,7 @@ import { User } from './src/resources/user/user.model'
 const models = { User, List, Item }
 
 const url =
-  process.env.MONGODB_URI ||
-  process.env.DB_URL ||
-  'mongodb://localhost:27017/tipe-devapi-testing'
+  process.env.DB_URL || 'mongodb://localhost:27017/tipe-devapi-testing'
 
 global.newId = () => {
   return mongoose.Types.ObjectId()
@@ -35,6 +34,11 @@ beforeEach(async done => {
       await mongoose.connect(
         url + db,
         {
+          auth: {
+            user: 'admin',
+            password: 'password'
+          },
+          authSource: 'admin',
           useNewUrlParser: true,
           autoIndex: true
         }
@@ -51,9 +55,22 @@ beforeEach(async done => {
   }
   done()
 })
-afterEach(async done => {
+/* afterEach(async done => {
   await mongoose.connection.db.dropDatabase()
   await mongoose.disconnect()
+  return done()
+}) */
+afterEach(async done => {
+  try {
+    await mongoose.connection.db.dropDatabase()
+    await mongoose.disconnect()
+  } catch (err) {
+    console.log(err)
+  }
+  await mongoose.disconnect()
+  return done()
+})
+afterAll(done => {
   return done()
 })
 afterAll(done => {
